@@ -5,7 +5,7 @@ export default function App() {
 
   const handleStartGame = () => {
     setLoading(true);
-    alert('🚀 Игра запускается!');
+    alert('🌱 Уборка начинается!');
     setLoading(false);
   };
 
@@ -21,30 +21,29 @@ export default function App() {
       {/* Шапка */}
       <header>
         <div className="logo">
-          <div className="logo-icon">⚡</div>
-          <span>KOSMO<span style={{ color: '#22d3ee' }}>HAKATON</span></span>
-        </div>
-        <div className="server-status">
-          ● Сервер подключен
+          <div className="logo-icon">
+            {/* Иконка бутылки */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 2h4v2h-4z"/>
+              <path d="M9 4h6v3a2 2 0 0 1 1 1.73V20a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V8.73A2 2 0 0 1 9 7V4z"/>
+            </svg>
+          </div>
+          <span>ЧИСТЫЙ<span style={{ color: '#4ade80' }}>БЕРЕГ</span></span>
         </div>
       </header>
 
       {/* Центральный контент */}
       <main>
         <div className="glass-card">
-          <div className="badge">MVP Release v1.0</div>
-          <h1>Интерактивный Космический Симулятор</h1>
+          <div className="badge">Эко-Проект v1.0</div>
+          <h1>Чистый Берег</h1>
           <p>
-            Добро пожаловать в веб-приложение! Пройдите серию испытаний, накапливайте очки и взаимодействуйте с системой в режиме реального времени.
+            Добро пожаловать в приложение! Очистите побережье от мусора, сортируйте отходы и сделайте мир чище в интерактивном режиме. Это приложение может служить обучением для тех, кто заинтересован в том, чтобы сделать реальный мир чище и экологичнее.
           </p>
-          <div className="card-footer">
-            <div>Статус: <b>Готов к старту</b></div>
-            <div>Пинг: <b style={{ color: '#34d399' }}>~12 ms</b></div>
-          </div>
         </div>
 
         <button className="start-btn" onClick={handleStartGame} disabled={loading}>
-          {loading ? 'ЗАГРУЗКА...' : 'ЗАПУСТИТЬ ИГРУ →'}
+          {loading ? 'ЗАГРУЗКА...' : 'НАЧАТЬ УБОРКУ →'}
         </button>
       </main>
     </div>

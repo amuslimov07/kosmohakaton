@@ -36,7 +36,7 @@ header {
   top: 0;
   left: 0;
   width: 100%;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(30, 53, 36, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -93,12 +93,12 @@ main {
   width: 100%;
   max-width: 650px;
   padding: 2.5rem;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(74, 93, 78, 0.35);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  box-shadow: 0 10px 25px rgba(47, 72, 58, 0.4);
 }
 
 .badge {
@@ -150,7 +150,7 @@ p {
   font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, #06b6d4, #2563eb, #4f46e5);
+  background: linear-gradient(135deg, #2F483A, #4A5D4E);
   border: none;
   border-radius: 1rem;
   cursor: pointer;
