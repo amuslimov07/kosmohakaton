@@ -29,7 +29,7 @@ class UserService {
 
     return {
       ...tokens,
-      userDto,
+      user: userDto,
     };
   }
   async activate(activationLink) {
@@ -55,7 +55,7 @@ class UserService {
 
     return {
       ...tokens,
-      userDto,
+      user: userDto,
     };
   }
   async logout(refreshToken) {
@@ -78,7 +78,7 @@ class UserService {
 
     return {
       ...tokens,
-      userDto,
+      user: userDto,
     };
   }
 }
