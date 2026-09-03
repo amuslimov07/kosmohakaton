@@ -8,6 +8,10 @@ import { observer } from "mobx-react-lite";
 function AppRouter() {
   const { store } = useContext(Context);
 
+  if (store.isLoading) {
+    return <div className="app-loading">Проверка авторизации...</div>;
+  }
+
   return (
     <Routes>
       {store.isAuth

@@ -10,4 +10,7 @@ export default class AuthService {
   static async logout() {
     return $api.post("/logout");
   }
+  static async profile() {
+    return $api.get("/user/me");
+  }
 }

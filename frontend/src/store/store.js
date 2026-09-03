@@ -27,7 +27,9 @@ export default class Store {
       this.setAuth(true);
       this.setUser(response.data.user);
     } catch (e) {
-      console.log(e.response?.data?.message);
+      if (e.response?.status !== 401) {
+        console.error(e.response?.data?.message || "Ошибка входа");
+      }
     }
   }
   async registration(email, password) {
@@ -38,7 +40,9 @@ export default class Store {
       this.setAuth(true);
       this.setUser(response.data.user);
     } catch (e) {
-      console.log(e.response?.data?.message);
+      if (e.response?.status !== 401) {
+        console.error(e.response?.data?.message || "Ошибка регистрации");
+      }
     }
   }
   async logout() {
@@ -49,7 +53,9 @@ export default class Store {
       this.setUser({});
       console.log(response);
     } catch (e) {
-      console.log(e.response?.data?.message);
+      if (e.response?.status !== 401) {
+        console.error(e.response?.data?.message || "Ошибка выхода");
+      }
     }
   }
 
@@ -59,12 +65,15 @@ export default class Store {
       const response = await axios.get(`${API_URL}/refresh`, {
         withCredentials: true,
       });
-      console.log(response);
       localStorage.setItem("token", response.data.accessToken);
       this.setAuth(true);
       this.setUser(response.data.user);
     } catch (e) {
-      console.log(e.response?.data?.message);
+      if (e.response?.status !== 401) {
+        console.error(
+          e.response?.data?.message || "Ошибка проверки авторизации",
+        );
+      }
     } finally {
       this.setIsLoading(false);
     }

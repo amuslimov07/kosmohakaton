@@ -15,9 +15,12 @@ function Navbar() {
       </Link>
       <div className="navbar__links">
         {store.isAuth ? (
-          <button className="nav-logout" onClick={() => store.logout()}>
-            Выйти
-          </button>
+          <>
+            <NavLink to="/profile">Профиль</NavLink>
+            <button className="nav-logout" onClick={() => store.logout()}>
+              Выйти
+            </button>
+          </>
         ) : (
           <>
             <NavLink to="/login">Войти</NavLink>

@@ -72,6 +72,9 @@ class UserService {
       throw ApiError.UnauthorizedError();
     }
     const user = await UserModel.findById(userData.id);
+    if (!user) {
+      throw ApiError.UnauthorizedError();
+    }
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({ ...userDto });
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -80,6 +83,14 @@ class UserService {
       ...tokens,
       user: userDto,
     };
+  }
+
+  async getProfile(userId) {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw ApiError.UnauthorizedError();
+    }
+    return new UserDto(user);
   }
 }
 module.exports = new UserService();
