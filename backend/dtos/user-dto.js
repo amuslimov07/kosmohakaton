@@ -4,10 +4,12 @@ module.exports = class UserDto {
   isActivated;
   volunteering;
   bonuses;
+  role;
 
   constructor(model) {
     this.email = model.email;
     this.id = model._id;
+    this.role = model.role || "volunteer";
     this.isActivated = model.isActivated;
     this.volunteering = {
       cleanedCount: model.cleanedCount || 0,

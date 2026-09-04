@@ -20,29 +20,32 @@ export default class Store {
     this.isLoading = bool;
   }
 
-  async login(email, password) {
+  async login(email, password, role) {
     try {
-      const response = await AuthService.login(email, password);
+      const response = await AuthService.login(email, password, role);
       localStorage.setItem("token", response.data.accessToken);
       this.setAuth(true);
       this.setUser(response.data.user);
+      return { success: true };
     } catch (e) {
-      if (e.response?.status !== 401) {
-        console.error(e.response?.data?.message || "Ошибка входа");
-      }
+      return {
+        success: false,
+        message: e.response?.data?.message || "Не удалось войти в аккаунт",
+      };
     }
   }
-  async registration(email, password) {
+  async registration(email, password, role) {
     try {
-      const response = await AuthService.registration(email, password);
-      console.log(response);
+      const response = await AuthService.registration(email, password, role);
       localStorage.setItem("token", response.data.accessToken);
       this.setAuth(true);
       this.setUser(response.data.user);
+      return { success: true };
     } catch (e) {
-      if (e.response?.status !== 401) {
-        console.error(e.response?.data?.message || "Ошибка регистрации");
-      }
+      return {
+        success: false,
+        message: e.response?.data?.message || "Не удалось создать аккаунт",
+      };
     }
   }
   async logout() {

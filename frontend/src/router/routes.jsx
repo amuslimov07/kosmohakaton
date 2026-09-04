@@ -2,6 +2,7 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Registration from "../pages/Registration";
 import Profile from "../pages/Profile";
+import TerritoryDashboard from "../pages/TerritoryDashboard";
 
 export const privateRoutes = [
   {
@@ -11,6 +12,10 @@ export const privateRoutes = [
   {
     path: "/profile",
     element: <Profile />,
+  },
+  {
+    path: "/territory",
+    element: <TerritoryDashboard />,
   },
 ];
 export const publicRoutes = [
