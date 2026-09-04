@@ -10,6 +10,21 @@
   position: relative;
   z-index: 2;
 }
+.home-analysis-nav {
+  width: min(100%, 980px);
+  margin: 1.5rem auto !important;
+  justify-content: center;
+  position: relative;
+  z-index: 11;
+}
+.home-analysis-nav button {
+  min-height: 44px;
+}
+.home-analysis-nav + main {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  align-items: stretch;
+}
 .brand {
   display: flex;
   gap: 11px;
@@ -387,7 +402,14 @@ h1 {
     font-size: 16px;
   }
   .navbar__links {
-    gap: 12px;
+    max-width: calc(100vw - 150px);
+    gap: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+  .navbar__links::-webkit-scrollbar {
+    display: none;
   }
   .navbar__links a {
     font-size: 12px;
