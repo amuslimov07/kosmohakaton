@@ -15,9 +15,18 @@ function Navbar() {
       </Link>
       <div className="navbar__links">
         {store.isAuth ? (
-          <button className="nav-logout" onClick={() => store.logout()}>
-            Выйти
-          </button>
+          <>
+            {store.user.role === "employee" && (
+              <NavLink to="/territory">Кабинет ООПТ</NavLink>
+            )}
+            <NavLink to="/education">Обучение</NavLink>
+            <NavLink to="/events">Мероприятия</NavLink>
+            <NavLink to="/achievements">Достижения</NavLink>
+            <NavLink to="/profile">Профиль</NavLink>
+            <button className="nav-logout" onClick={() => store.logout()}>
+              Выйти
+            </button>
+          </>
         ) : (
           <>
             <NavLink to="/login">Войти</NavLink>

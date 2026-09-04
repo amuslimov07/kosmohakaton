@@ -6,7 +6,7 @@ const tokenService = require("./token-service");
 const UserDto = require("../dtos/user-dto");
 const ApiError = require("../exceptions/api-error");
 class UserService {
-  async registration(email, password) {
+  async registration(email, password, role) {
     const candidate = await UserModel.findOne({ email });
     if (candidate) {
       throw ApiError.BadRequest("Пользователь с таким Email уже существует");
@@ -17,6 +17,7 @@ class UserService {
       email,
       password: hashPassword,
       activationLink,
+      role,
     });
     await mailService.sendActivationMail(
       email,
@@ -40,7 +41,7 @@ class UserService {
     user.isActivated = true;
     await user.save();
   }
-  async login(email, password) {
+  async login(email, password, role) {
     const user = await UserModel.findOne({ email });
     if (!user) {
       throw ApiError.BadRequest("Пользователь с таким email не был найден");
@@ -48,6 +49,11 @@ class UserService {
     const isPassEquals = await bcrypt.compare(password, user.password);
     if (!isPassEquals) {
       throw ApiError.BadRequest("Неверный пароль");
+    }
+    if (user.role !== role) {
+      throw ApiError.BadRequest(
+        `Этот аккаунт зарегистрирован как ${user.role === "employee" ? "сотрудник ООПТ" : "обычный пользователь"}`,
+      );
     }
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({ ...userDto });
@@ -72,6 +78,9 @@ class UserService {
       throw ApiError.UnauthorizedError();
     }
     const user = await UserModel.findById(userData.id);
+    if (!user) {
+      throw ApiError.UnauthorizedError();
+    }
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({ ...userDto });
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -80,6 +89,14 @@ class UserService {
       ...tokens,
       user: userDto,
     };
+  }
+
+  async getProfile(userId) {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw ApiError.UnauthorizedError();
+    }
+    return new UserDto(user);
   }
 }
 module.exports = new UserService();

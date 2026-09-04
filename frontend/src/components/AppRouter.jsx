@@ -11,9 +11,18 @@ function AppRouter() {
   return (
     <Routes>
       {store.isAuth
-        ? privateRoutes.map((route) => (
-            <Route key={route.path} path={route.path} element={route.element} />
-          ))
+        ? privateRoutes
+            .filter(
+              (route) =>
+                route.path !== "/territory" || store.user.role === "employee",
+            )
+            .map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={route.element}
+              />
+            ))
         : publicRoutes.map((route) => (
             <Route key={route.path} path={route.path} element={route.element} />
           ))}

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import LoginForm from "../components/LoginForm";
 import { Link } from "react-router-dom";
 import { useContext } from "react";
@@ -7,10 +6,6 @@ import { observer } from "mobx-react-lite";
 
 function Login() {
   const { store } = useContext(Context);
-  useEffect(() => {
-    store.checkAuth();
-  }, [store]);
-
   if (store.isLoading) {
     return <div>Загрузка....</div>;
   }
