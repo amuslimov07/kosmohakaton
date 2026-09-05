@@ -5,28 +5,28 @@ const trainingTasks = [
   {
     id: "shore-01",
     leftImage:
-      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1000&q=85",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQW3w5CX5c6LwC2f0gpcbgnf-dW5RQ0STVg968qR33pZQ&s=10",
     leftCorrectAnswer: "clean",
     rightImage:
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1000&q=85",
+      "https://ocean.ru/media/k2/items/cache/2955874dabdd61fd763b543a1fbf3447_XL.jpg",
     rightCorrectAnswer: "dirty",
   },
   {
     id: "shore-02",
     leftImage:
-      "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1000&q=85",
+      "https://ocean.ru/media/k2/items/cache/2955874dabdd61fd763b543a1fbf3447_XL.jpg",
     leftCorrectAnswer: "dirty",
     rightImage:
-      "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=1000&q=85",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQW3w5CX5c6LwC2f0gpcbgnf-dW5RQ0STVg968qR33pZQ&s=10",
     rightCorrectAnswer: "clean",
   },
   {
     id: "shore-03",
     leftImage:
-      "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1000&q=85",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQW3w5CX5c6LwC2f0gpcbgnf-dW5RQ0STVg968qR33pZQ&s=10",
     leftCorrectAnswer: "clean",
     rightImage:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=85",
+      "https://ocean.ru/media/k2/items/cache/2955874dabdd61fd763b543a1fbf3447_XL.jpg",
     rightCorrectAnswer: "dirty",
   },
 ];
