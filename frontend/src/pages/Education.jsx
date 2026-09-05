@@ -795,19 +795,29 @@ export default function Education() {
         </div>
 
         <div className="mode-switcher">
-          <button
-            className={viewMode === "training" ? "active" : ""}
-            onClick={() => setViewMode("training")}
+          <div className="mode-options">
+            <button
+              className={viewMode === "training" ? "active" : ""}
+              onClick={() => setViewMode("training")}
+            >
+              Обучение
+            </button>
+            <button
+              className={viewMode === "exam" ? "active" : ""}
+              disabled={!trainingCompleted}
+              onClick={() => trainingCompleted && setViewMode("exam")}
+            >
+              Экзамен
+            </button>
+          </div>
+          <a
+            className="platform-button"
+            href="https://xn--80aihfaa6bgjbrt2e.xn--p1ai/chistyi-bereg"
+            target="_blank"
+            rel="noreferrer"
           >
-            Обучение
-          </button>
-          <button
-            className={viewMode === "exam" ? "active" : ""}
-            disabled={!trainingCompleted}
-            onClick={() => trainingCompleted && setViewMode("exam")}
-          >
-            Экзамен
-          </button>
+            Образовательная платформа
+          </a>
         </div>
 
         {!trainingCompleted && (

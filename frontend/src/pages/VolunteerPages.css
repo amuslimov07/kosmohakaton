@@ -434,8 +434,12 @@
 }
 
 .mode-switcher {
-  display: inline-flex;
-  gap: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 8px;
   margin: 0 0 20px;
   background: rgba(255, 255, 255, 0.68);
@@ -444,7 +448,13 @@
   box-shadow: 0 12px 28px rgba(17, 49, 39, 0.08);
 }
 
-.mode-switcher button {
+.mode-options {
+  display: flex;
+  gap: 12px;
+}
+
+.mode-switcher button,
+.mode-switcher a {
   padding: 12px 18px;
   border: 0;
   border-radius: 999px;
@@ -452,6 +462,30 @@
   color: #355a4c;
   font-weight: 800;
   cursor: pointer;
+  text-decoration: none;
+}
+
+.platform-button {
+  border: 1px solid rgba(28, 163, 106, 0.28) !important;
+  background: rgba(232, 247, 237, 0.82) !important;
+}
+
+@media (max-width: 640px) {
+  .mode-switcher {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mode-options,
+  .platform-button {
+    width: 100%;
+  }
+
+  .mode-options button,
+  .platform-button {
+    flex: 1;
+    text-align: center;
+  }
 }
 
 .mode-switcher button.active {
