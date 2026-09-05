@@ -179,6 +179,51 @@ h1 {
   border: 1px solid rgba(190, 218, 190, 0.2);
   border-radius: 8px;
 }
+.role-cards {
+  display: grid;
+  gap: 8px;
+}
+.role-card {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  color: #c0cdc2;
+  text-align: left;
+  background: rgba(11, 31, 23, 0.28);
+  border: 1px solid rgba(190, 218, 190, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.role-card:hover,
+.role-card:focus-visible,
+.role-card.selected {
+  border-color: #78db91;
+  background: rgba(72, 132, 84, 0.3);
+  outline: 0;
+}
+.role-card strong {
+  color: #f3f8f3;
+  font-size: 13px;
+}
+.role-card span {
+  color: #b5c7b7;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.employee-secret-field {
+  display: grid;
+  gap: 7px;
+  animation: rise 0.2s ease both;
+}
+.employee-secret-field small {
+  color: #aabdac;
+  font-size: 11px;
+  line-height: 1.45;
+}
 .role-choice legend {
   padding: 0 5px;
   color: #d9e6da;

@@ -19,16 +19,19 @@ const validate = (req, res, next) => {
 
 router.post(
   "/registration",
-  body("email").isEmail(),
-  body("password").isLength({ min: 8, max: 32 }),
-  body("role").isIn(["volunteer", "employee"]),
+  body("email").trim().isEmail().withMessage("Введите корректный email"),
+  body("password")
+    .isLength({ min: 8, max: 32 })
+    .withMessage("Пароль должен содержать от 8 до 32 символов"),
+  body("role").isIn(["volunteer", "employee"]).withMessage("Выберите роль"),
   userController.registration,
 );
 router.post(
   "/login",
-  body("email").isEmail(),
-  body("password").isLength({ min: 8, max: 32 }),
-  body("role").isIn(["volunteer", "employee"]),
+  body("email").trim().isEmail().withMessage("Введите корректный email"),
+  body("password")
+    .isLength({ min: 8, max: 32 })
+    .withMessage("Пароль должен содержать от 8 до 32 символов"),
   userController.login,
 );
 router.post("/logout", userController.logout);

@@ -6,10 +6,17 @@ const tokenService = require("./token-service");
 const UserDto = require("../dtos/user-dto");
 const ApiError = require("../exceptions/api-error");
 class UserService {
-  async registration(email, password, role) {
+  async registration(email, password, role, employeeSecret) {
     const candidate = await UserModel.findOne({ email });
     if (candidate) {
       throw ApiError.BadRequest("Пользователь с таким Email уже существует");
+    }
+    if (
+      role === "employee" &&
+      (!process.env.EMPLOYEE_REGISTRATION_SECRET ||
+        employeeSecret !== process.env.EMPLOYEE_REGISTRATION_SECRET)
+    ) {
+      throw ApiError.BadRequest("Неверный секретный код сотрудника ООПТ");
     }
     const hashPassword = await bcrypt.hash(password, 3);
     const activationLink = uuid.v4();
@@ -41,7 +48,7 @@ class UserService {
     user.isActivated = true;
     await user.save();
   }
-  async login(email, password, role) {
+  async login(email, password) {
     const user = await UserModel.findOne({ email });
     if (!user) {
       throw ApiError.BadRequest("Пользователь с таким email не был найден");
@@ -49,11 +56,6 @@ class UserService {
     const isPassEquals = await bcrypt.compare(password, user.password);
     if (!isPassEquals) {
       throw ApiError.BadRequest("Неверный пароль");
-    }
-    if (user.role !== role) {
-      throw ApiError.BadRequest(
-        `Этот аккаунт зарегистрирован как ${user.role === "employee" ? "сотрудник ООПТ" : "обычный пользователь"}`,
-      );
     }
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({ ...userDto });

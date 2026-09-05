@@ -8,6 +8,7 @@ function RegistrationForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("volunteer");
+  const [employeeSecret, setEmployeeSecret] = useState("");
   const { store } = useContext(Context);
   const [error, setError] = useState("");
 
@@ -22,7 +23,16 @@ function RegistrationForm() {
       setError("Пароль должен содержать минимум 8 символов");
       return;
     }
-    const result = await store.registration(email, password, role);
+    if (role === "employee" && !employeeSecret) {
+      setError("Введите секретный код сотрудника ООПТ");
+      return;
+    }
+    const result = await store.registration(
+      email,
+      password,
+      role,
+      employeeSecret,
+    );
     if (!result.success) setError(result.message);
   };
 
@@ -59,28 +69,51 @@ function RegistrationForm() {
         </strong>
       </div>
       <fieldset className="role-choice">
-        <legend>Тип аккаунта</legend>
-        <label>
-          <input
-            type="radio"
-            name="registration-role"
-            value="volunteer"
-            checked={role === "volunteer"}
-            onChange={(e) => setRole(e.target.value)}
-          />{" "}
-          Обычный пользователь
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="registration-role"
-            value="employee"
-            checked={role === "employee"}
-            onChange={(e) => setRole(e.target.value)}
-          />{" "}
-          Сотрудник ООПТ
-        </label>
+        <legend>Выберите роль</legend>
+        <div className="role-cards">
+          <button
+            className={`role-card ${role === "volunteer" ? "selected" : ""}`}
+            type="button"
+            onClick={() => setRole("volunteer")}
+            aria-pressed={role === "volunteer"}
+          >
+            <strong>Волонтёр</strong>
+            <span>
+              Участвуйте в мероприятиях, проходите обучение и помогайте охранять
+              природные территории.
+            </span>
+          </button>
+          <button
+            className={`role-card ${role === "employee" ? "selected" : ""}`}
+            type="button"
+            onClick={() => setRole("employee")}
+            aria-pressed={role === "employee"}
+          >
+            <strong>Сотрудник ООПТ</strong>
+            <span>
+              Управляйте мероприятиями и задачами природоохранной территории.
+            </span>
+          </button>
+        </div>
       </fieldset>
+
+      {role === "employee" && (
+        <div className="employee-secret-field">
+          <label htmlFor="employee-secret">Секретный код сотрудника ООПТ</label>
+          <input
+            id="employee-secret"
+            onChange={(e) => setEmployeeSecret(e.target.value)}
+            type="password"
+            placeholder="Введите код"
+            value={employeeSecret}
+            autoComplete="off"
+          />
+          <small>
+            Код необходим для подтверждения права регистрации аккаунта
+            сотрудника ООПТ.
+          </small>
+        </div>
+      )}
 
       {error && <p className="form-error">{error}</p>}
       <button className="form-submit" type="submit">

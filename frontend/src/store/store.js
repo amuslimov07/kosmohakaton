@@ -20,9 +20,9 @@ export default class Store {
     this.isLoading = bool;
   }
 
-  async login(email, password, role) {
+  async login(email, password) {
     try {
-      const response = await AuthService.login(email, password, role);
+      const response = await AuthService.login(email, password);
       localStorage.setItem("token", response.data.accessToken);
       localStorage.setItem("userId", response.data.user.id);
       localStorage.removeItem("dzz-mission-progress");
@@ -37,9 +37,14 @@ export default class Store {
       };
     }
   }
-  async registration(email, password, role) {
+  async registration(email, password, role, employeeSecret) {
     try {
-      const response = await AuthService.registration(email, password, role);
+      const response = await AuthService.registration(
+        email,
+        password,
+        role,
+        employeeSecret,
+      );
       localStorage.setItem("token", response.data.accessToken);
       localStorage.setItem("userId", response.data.user.id);
       localStorage.removeItem("dzz-mission-progress");
