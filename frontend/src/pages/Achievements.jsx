@@ -4,7 +4,12 @@ import "./VolunteerPages.css";
 
 const readCertification = () => {
   try {
-    return window.localStorage.getItem("dzz-specialist-certified") === "true";
+    const userId = window.localStorage.getItem("userId");
+    return (
+      Boolean(userId) &&
+      window.localStorage.getItem(`dzz-specialist-certified:${userId}`) ===
+        "true"
+    );
   } catch {
     return false;
   }

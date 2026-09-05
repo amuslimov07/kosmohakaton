@@ -10,6 +10,9 @@ const UserSchema = new Schema({
   cleanedDistance: { type: Number, default: 0 },
   refCount: { type: Number, default: 0 },
   placesCount: { type: Number, default: 0 },
+  bonusBalance: { type: Number, default: 0 },
+  totalEarned: { type: Number, default: 0 },
+  totalSpent: { type: Number, default: 0 },
 });
 
 module.exports = model("User", UserSchema);

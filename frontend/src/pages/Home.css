@@ -150,32 +150,14 @@
   background: rgba(6, 25, 17, 0.48);
   border-radius: 6px;
 }
+.satellite-map-shell {
+  position: relative;
+  height: 360px;
+}
 .real-map {
   height: 360px;
   width: 100%;
   z-index: 0;
-  filter: saturate(0.8) contrast(0.95);
-}
-.workspace-map:before,
-.workspace-map:after {
-  content: "";
-  position: absolute;
-  background: #e8e4bd99;
-  border-radius: 50%;
-  transform: rotate(-25deg);
-}
-.workspace-map:before {
-  width: 90%;
-  height: 25%;
-  left: -15%;
-  top: 28%;
-}
-.workspace-map:after {
-  width: 80%;
-  height: 22%;
-  right: -15%;
-  bottom: 17%;
-  transform: rotate(25deg);
 }
 .workspace-pin {
   position: absolute;
@@ -220,6 +202,17 @@
   background: #173c2dd9;
   border-radius: 4px;
   font-size: 10px;
+}
+.map-error {
+  position: absolute;
+  inset: 16px 16px auto;
+  z-index: 2;
+  padding: 12px;
+  color: #f5e3d8;
+  background: rgba(97, 45, 33, 0.9);
+  border: 1px solid rgba(255, 190, 160, 0.35);
+  border-radius: 5px;
+  font-size: 12px;
 }
 .area-list {
   display: grid;
@@ -317,80 +310,6 @@
   color: #b7cbb9;
   font-size: 12px;
 }
-.ai-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 22px;
-}
-.ai-visual {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: end;
-  min-height: 280px;
-  padding: 20px;
-  overflow: hidden;
-  color: #e9f0e2;
-  background:
-    linear-gradient(135deg, rgba(61, 111, 82, 0.78), rgba(31, 65, 47, 0.82)),
-    url("https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=80")
-      center/cover;
-  border-radius: 6px;
-}
-.ai-visual:before {
-  content: "";
-  position: absolute;
-  width: 70%;
-  height: 140%;
-  left: 18%;
-  top: -20%;
-  background: #d7d1a288;
-  border-radius: 50%;
-  transform: rotate(25deg);
-}
-.ai-visual span,
-.ai-visual strong {
-  position: relative;
-}
-.ai-visual span {
-  font-size: 10px;
-  letter-spacing: 1px;
-}
-.ai-visual strong {
-  margin-top: 7px;
-  font-size: 20px;
-}
-.ai-scan {
-  position: absolute;
-  inset: 0;
-  border-top: 1px solid #d0f59d;
-  animation: home-scan 3s linear infinite;
-}
-.ai-console {
-  padding: 20px;
-  color: #cde2ce;
-  background: rgba(6, 25, 17, 0.7);
-  border-radius: 6px;
-  font: 12px/2 monospace;
-}
-.ai-console p {
-  margin-bottom: 12px;
-  color: #dcecdc;
-  font-family: "Manrope";
-}
-.ai-console .primary-button {
-  display: block;
-  margin-top: 18px;
-  font-family: "Manrope";
-}
-.info-note {
-  margin-top: 17px;
-  padding: 13px;
-  color: #c2d2c4;
-  background: rgba(9, 31, 22, 0.45);
-  font-size: 12px;
-}
 .hq-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -475,8 +394,7 @@
   .home-analysis-nav button {
     min-width: 150px;
   }
-  .workspace-grid,
-  .ai-layout {
+  .workspace-grid {
     grid-template-columns: 1fr;
   }
   .hq-callout {
@@ -511,6 +429,7 @@
     font-size: 23px;
   }
   .workspace-map,
+  .satellite-map-shell,
   .real-map {
     min-height: 280px;
     height: 280px;

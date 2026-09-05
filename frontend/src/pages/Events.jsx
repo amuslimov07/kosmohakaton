@@ -12,6 +12,7 @@ export default function Events() {
     status: "published",
   });
   const [message, setMessage] = useState("");
+  const [registeringEventId, setRegisteringEventId] = useState(null);
 
   const load = async () => {
     try {
@@ -39,12 +40,16 @@ export default function Events() {
     loadEvents();
   }, [filters]);
   const register = async (eventId) => {
+    if (registeringEventId) return;
+    setRegisteringEventId(eventId);
     try {
       await $api.post(`/events/${eventId}/register`);
       setMessage("Вы записаны. До встречи на территории!");
       load();
     } catch (error) {
       setMessage(error.response?.data?.message || "Не удалось записаться");
+    } finally {
+      setRegisteringEventId(null);
     }
   };
 
@@ -136,9 +141,16 @@ export default function Events() {
                 </Link>
                 <button
                   className="primary-button"
+                  disabled={
+                    event.isRegistered || registeringEventId === event.id
+                  }
                   onClick={() => register(event.id)}
                 >
-                  Записаться
+                  {event.isRegistered
+                    ? "Вы записаны"
+                    : registeringEventId === event.id
+                      ? "Записываем..."
+                      : "Записаться"}
                 </button>
               </div>
             </article>

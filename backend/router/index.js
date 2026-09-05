@@ -6,6 +6,7 @@ const authMiddleware = require("../middlewares/auth-middleware");
 const territoryController = require("../controllers/territory-controller");
 const roleMiddleware = require("../middlewares/role-middleware");
 const volunteerController = require("../controllers/volunteer-controller");
+const bonusController = require("../controllers/bonus-controller");
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
@@ -40,6 +41,12 @@ router.get(
   authMiddleware,
   roleMiddleware("employee"),
   territoryController.dashboard,
+);
+router.get(
+  "/territory/analytics",
+  authMiddleware,
+  roleMiddleware("employee"),
+  territoryController.analytics,
 );
 router.post(
   "/territory/areas",
@@ -88,6 +95,13 @@ router.get(
   "/education/progress",
   authMiddleware,
   volunteerController.getProgress,
+);
+router.post(
+  "/education/progress/assessment",
+  authMiddleware,
+  body("levelId").isString().notEmpty(),
+  validate,
+  volunteerController.saveAssessment,
 );
 router.post(
   "/education/courses/:courseId/modules/:moduleId",
@@ -144,5 +158,32 @@ router.get(
   validate,
   volunteerController.getDzz,
 );
+router.get(
+  "/events/:eventId/participants",
+  authMiddleware,
+  roleMiddleware("employee"),
+  param("eventId").isString().notEmpty(),
+  validate,
+  bonusController.listEventParticipants,
+);
+router.post(
+  "/events/:eventId/participants/:userId/confirm",
+  authMiddleware,
+  roleMiddleware("employee"),
+  param("eventId").isString().notEmpty(),
+  param("userId").isString().notEmpty(),
+  validate,
+  bonusController.confirmParticipation,
+);
+router.get("/rewards", authMiddleware, bonusController.listRewards);
+router.get("/rewards/my", authMiddleware, bonusController.myRewards);
+router.get("/rewards/:id", authMiddleware, bonusController.getReward);
+router.post(
+  "/rewards/:id/redeem",
+  authMiddleware,
+  bonusController.redeemReward,
+);
+router.get("/bonus/balance", authMiddleware, bonusController.getBalance);
+router.get("/bonus/history", authMiddleware, bonusController.getHistory);
 
 module.exports = router;

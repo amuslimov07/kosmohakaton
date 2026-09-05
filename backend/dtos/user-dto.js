@@ -4,6 +4,9 @@ module.exports = class UserDto {
   isActivated;
   volunteering;
   bonuses;
+  bonusBalance;
+  totalEarned;
+  totalSpent;
   role;
 
   constructor(model) {
@@ -17,10 +20,9 @@ module.exports = class UserDto {
       refCount: model.refCount || 0,
       placesCount: model.placesCount || 0,
     };
-    this.bonuses =
-      this.volunteering.cleanedCount * 50 +
-      this.volunteering.cleanedDistance * 10 +
-      this.volunteering.refCount * 25 +
-      this.volunteering.placesCount * 100;
+    this.bonusBalance = Number(model.bonusBalance || 0);
+    this.totalEarned = Number(model.totalEarned || 0);
+    this.totalSpent = Number(model.totalSpent || 0);
+    this.bonuses = this.bonusBalance;
   }
 };

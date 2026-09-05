@@ -7,6 +7,8 @@ import Education from "../pages/Education";
 import Events from "../pages/Events";
 import EventDetails from "../pages/EventDetails";
 import Achievements from "../pages/Achievements";
+import Rewards from "../pages/Rewards";
+import MyRewards from "../pages/MyRewards";
 
 export const privateRoutes = [
   {
@@ -25,6 +27,8 @@ export const privateRoutes = [
   { path: "/events", element: <Events /> },
   { path: "/events/:eventId", element: <EventDetails /> },
   { path: "/achievements", element: <Achievements /> },
+  { path: "/rewards", element: <Rewards /> },
+  { path: "/my-rewards", element: <MyRewards /> },
 ];
 export const publicRoutes = [
   {

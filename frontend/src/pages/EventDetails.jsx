@@ -8,6 +8,7 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [area, setArea] = useState(null);
   const [message, setMessage] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
   useEffect(() => {
     Promise.all([$api.get(`/events/${eventId}`), $api.get("/territory/areas")])
       .then(([eventResponse, areasResponse]) => {
@@ -27,15 +28,20 @@ export default function EventDetails() {
       </main>
     );
   const register = async () => {
+    if (isRegistering || event.isRegistered) return;
+    setIsRegistering(true);
     try {
       await $api.post(`/events/${event.id}/register`);
       setMessage("Вы записаны на мероприятие");
       setEvent({
         ...event,
         volunteersRegistered: event.volunteersRegistered + 1,
+        isRegistered: true,
       });
     } catch (error) {
       setMessage(error.response?.data?.message || "Не удалось записаться");
+    } finally {
+      setIsRegistering(false);
     }
   };
   return (
@@ -93,8 +99,16 @@ export default function EventDetails() {
               {event.volunteersNeeded - event.volunteersRegistered}
             </strong>
             <span>свободных мест</span>
-            <button className="primary-button" onClick={register}>
-              Записаться на акцию
+            <button
+              className="primary-button"
+              disabled={isRegistering || event.isRegistered}
+              onClick={register}
+            >
+              {event.isRegistered
+                ? "Вы записаны"
+                : isRegistering
+                  ? "Записываем..."
+                  : "Записаться на акцию"}
             </button>
             {message && <p className="quiz-message">{message}</p>}
           </aside>

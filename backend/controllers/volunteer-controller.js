@@ -1,4 +1,6 @@
 const { randomUUID } = require("crypto");
+const EventRegistrationModel = require("../models/event-registration-model");
+const UserProgressModel = require("../models/user-progress-model");
 
 const courses = [
   {
@@ -393,20 +395,53 @@ class VolunteerController {
       ? res.json(course)
       : res.status(404).json({ message: "Курс не найден" });
   }
-  getProgress(req, res) {
+  async getProgress(req, res, next) {
     const state = getUserState(req.user.id);
-    return res.json({
-      courseId: courses[0].id,
-      completedModules: state.completedModules,
-      points: state.points,
-      status: statusFor(state),
-    });
+    try {
+      const savedProgress = await UserProgressModel.findOne({
+        user: req.user.id,
+        course: courses[0].id,
+      }).lean();
+      const completedModules = savedProgress?.completedModules?.length
+        ? savedProgress.completedModules
+        : state.completedModules;
+      const passedLevels = savedProgress?.passedLevels || [];
+      return res.json({
+        courseId: courses[0].id,
+        completedModules,
+        points: savedProgress?.points ?? state.points,
+        status: statusFor({ completedModules }),
+        passedLevels,
+        certified: savedProgress?.certified || false,
+      });
+    } catch (error) {
+      return next(error);
+    }
   }
-  submitModule(req, res) {
+  async submitModule(req, res, next) {
     const course = courses.find((item) => item.id === req.params.courseId);
-    const module = course?.modules[Number(req.params.moduleId)];
+    const moduleIndex = Number(req.params.moduleId);
+    const module = course?.modules[moduleIndex];
     if (!module) return res.status(404).json({ message: "Модуль не найден" });
     const state = getUserState(req.user.id);
+    const savedProgress = await UserProgressModel.findOne({
+      user: req.user.id,
+      course: courses[0].id,
+    }).lean();
+    if (savedProgress) {
+      state.completedModules = savedProgress.completedModules || [];
+      state.points = savedProgress.points || 0;
+    }
+    const previousModule = course.modules[moduleIndex - 1];
+    if (
+      moduleIndex > 0 &&
+      previousModule &&
+      !state.completedModules.includes(previousModule.id)
+    ) {
+      return res.status(403).json({
+        message: "Сначала завершите предыдущий модуль",
+      });
+    }
     const isCorrect = Number(req.body.answer) === module.answer;
     if (isCorrect && !state.completedModules.includes(module.id)) {
       state.completedModules.push(module.id);
@@ -422,46 +457,163 @@ class VolunteerController {
     }
     if (statusFor(state) === "completed")
       addAchievement(state, "course-complete");
-    return res.json({
-      correct: isCorrect,
-      correctAnswer: module.answer,
-      ...state,
-      status: statusFor(state),
-    });
+    try {
+      await UserProgressModel.findOneAndUpdate(
+        { user: req.user.id, course: courses[0].id },
+        {
+          $set: {
+            completedModules: state.completedModules,
+            points: state.points,
+            status: statusFor(state),
+          },
+          $setOnInsert: { user: req.user.id, course: courses[0].id },
+        },
+        { upsert: true },
+      );
+      return res.json({
+        correct: isCorrect,
+        correctAnswer: module.answer,
+        ...state,
+        status: statusFor(state),
+      });
+    } catch (error) {
+      return next(error);
+    }
   }
-  listEvents(req, res) {
+  async saveAssessment(req, res, next) {
+    const { levelId } = req.body;
+    if (typeof levelId !== "string" || !levelId)
+      return res.status(400).json({ message: "Некорректный уровень" });
+    try {
+      const savedProgress = await UserProgressModel.findOne({
+        user: req.user.id,
+        course: courses[0].id,
+      });
+      if (
+        !savedProgress ||
+        savedProgress.completedModules.length < courses[0].modules.length
+      ) {
+        return res.status(403).json({
+          message: "Сначала завершите все учебные модули",
+        });
+      }
+      const progress = await UserProgressModel.findOneAndUpdate(
+        { user: req.user.id, course: courses[0].id },
+        {
+          $addToSet: { passedLevels: levelId },
+          $setOnInsert: { user: req.user.id, course: courses[0].id },
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      );
+      const passedLevels = progress.passedLevels || [];
+      const certified = ["basics", "analysis", "practice"].every((id) =>
+        passedLevels.includes(id),
+      );
+      if (certified && !progress.certified) {
+        progress.certified = true;
+        await progress.save();
+      }
+      return res.json({ passedLevels, certified });
+    } catch (error) {
+      return next(error);
+    }
+  }
+  async listEvents(req, res, next) {
     const { territory, date, status } = req.query;
-    return res.json(
-      events.filter(
-        (event) =>
-          (!territory || event.territory === territory) &&
-          (!date || event.date === date) &&
-          (!status || event.status === status),
-      ),
-    );
+    try {
+      const registrations = await EventRegistrationModel.find({
+        user: req.user.id,
+        status: { $ne: "cancelled" },
+      })
+        .select("eventId")
+        .lean();
+      const registeredEventIds = new Set(
+        registrations.map((item) => item.eventId),
+      );
+      return res.json(
+        events
+          .filter(
+            (event) =>
+              (!territory || event.territory === territory) &&
+              (!date || event.date === date) &&
+              (!status || event.status === status),
+          )
+          .map((event) => ({
+            ...event,
+            isRegistered: registeredEventIds.has(event.id),
+          })),
+      );
+    } catch (error) {
+      return next(error);
+    }
   }
-  getEvent(req, res) {
+  async getEvent(req, res, next) {
     const event = findEvent(req.params.eventId);
-    return event
-      ? res.json(event)
-      : res.status(404).json({ message: "Мероприятие не найдено" });
+    if (!event)
+      return res.status(404).json({ message: "Мероприятие не найдено" });
+    try {
+      const registration = await EventRegistrationModel.findOne({
+        user: req.user.id,
+        eventId: event.id,
+        status: { $ne: "cancelled" },
+      })
+        .select("status")
+        .lean();
+      return res.json({ ...event, isRegistered: Boolean(registration) });
+    } catch (error) {
+      return next(error);
+    }
   }
-  register(req, res) {
+  async register(req, res) {
     const event = findEvent(req.params.eventId);
     const state = getUserState(req.user.id);
     if (!event)
       return res.status(404).json({ message: "Мероприятие не найдено" });
-    if (
-      state.registrations.some(
-        (item) => item.eventId === event.id && item.status !== "cancelled",
-      )
-    )
+    const existing = await EventRegistrationModel.findOne({
+      user: req.user.id,
+      eventId: req.params.eventId,
+    });
+    if (existing && existing.status !== "cancelled") {
       return res
-        .status(400)
+        .status(409)
         .json({ message: "Вы уже записаны на это мероприятие" });
+    }
     if (event.volunteersRegistered >= event.volunteersNeeded)
       return res.status(400).json({ message: "Свободных мест больше нет" });
+
+    let registration;
+    try {
+      registration = existing
+        ? await EventRegistrationModel.findOneAndUpdate(
+            { _id: existing._id, status: "cancelled" },
+            {
+              $set: { status: "registered", bonusPoints: 0, confirmedAt: null },
+            },
+            { new: true },
+          )
+        : await EventRegistrationModel.create({
+            user: req.user.id,
+            eventId: req.params.eventId,
+            status: "registered",
+            bonusPoints: 0,
+          });
+    } catch (error) {
+      if (error?.code === 11000) {
+        return res
+          .status(409)
+          .json({ message: "Вы уже записаны на это мероприятие" });
+      }
+      throw error;
+    }
+    if (!registration)
+      return res
+        .status(409)
+        .json({ message: "Вы уже записаны на это мероприятие" });
+
     event.volunteersRegistered += 1;
+    state.registrations = state.registrations.filter(
+      (item) => item.eventId !== event.id || item.status === "cancelled",
+    );
     state.registrations.push({ eventId: event.id, status: "registered" });
     state.activity.unshift({
       id: randomUUID(),
@@ -477,10 +629,10 @@ class VolunteerController {
     )
       addAchievement(state, "returning");
     return res
-      .status(201)
+      .status(existing ? 200 : 201)
       .json({ event, registration: state.registrations.at(-1) });
   }
-  cancelRegistration(req, res) {
+  async cancelRegistration(req, res) {
     const state = getUserState(req.user.id);
     const registration = state.registrations.find(
       (item) =>
@@ -489,18 +641,37 @@ class VolunteerController {
     if (!registration)
       return res.status(404).json({ message: "Запись не найдена" });
     registration.status = "cancelled";
+    await EventRegistrationModel.findOneAndUpdate(
+      { user: req.user.id, eventId: req.params.eventId },
+      { status: "cancelled" },
+      { new: true },
+    );
     const event = findEvent(req.params.eventId);
     if (event)
       event.volunteersRegistered = Math.max(0, event.volunteersRegistered - 1);
     return res.json(registration);
   }
-  myEvents(req, res) {
-    return res.json(
-      getUserState(req.user.id).registrations.map((registration) => ({
-        ...registration,
-        event: findEvent(registration.eventId),
-      })),
-    );
+  async myEvents(req, res, next) {
+    try {
+      const registrations = await EventRegistrationModel.find({
+        user: req.user.id,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+      return res.json(
+        registrations.map((registration) => ({
+          id: String(registration._id),
+          eventId: registration.eventId,
+          status: registration.status,
+          bonusPoints: registration.bonusPoints,
+          confirmedAt: registration.confirmedAt,
+          createdAt: registration.createdAt,
+          event: findEvent(registration.eventId),
+        })),
+      );
+    } catch (error) {
+      return next(error);
+    }
   }
   getAchievements(req, res) {
     const state = getUserState(req.user.id);
