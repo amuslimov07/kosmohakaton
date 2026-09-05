@@ -41,6 +41,12 @@ router.get(
   roleMiddleware("employee"),
   territoryController.dashboard,
 );
+router.get(
+  "/territory/analytics",
+  authMiddleware,
+  roleMiddleware("employee"),
+  territoryController.analytics,
+);
 router.post(
   "/territory/areas",
   authMiddleware,
