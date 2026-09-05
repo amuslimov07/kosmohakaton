@@ -86,6 +86,9 @@ export default function Home() {
   }, []);
 
   const selectTab = (tab) => setActiveTab(tab);
+  const selectedAreaCoordinates = selectedArea?.coordinates
+    ?.split(",")
+    .map((coordinate) => Number(coordinate.trim()));
 
   return (
     <div className="home-page">
@@ -150,7 +153,7 @@ export default function Home() {
             </p>
             <div className="workspace-grid">
               <div className="workspace-map">
-                <SatelliteMap />
+                <SatelliteMap centerCoordinates={selectedAreaCoordinates} />
               </div>
               <div className="area-list">
                 {areas.map((area) => (

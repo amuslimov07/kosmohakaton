@@ -38,7 +38,10 @@ function loadYandexMaps() {
   return yandexMapsPromise;
 }
 
-export default function SatelliteMap({ onMarkerSelect = noop }) {
+export default function SatelliteMap({
+  onMarkerSelect = noop,
+  centerCoordinates,
+}) {
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
   const [mapError, setMapError] = useState(false);
@@ -87,6 +90,14 @@ export default function SatelliteMap({ onMarkerSelect = noop }) {
       }
     };
   }, [onMarkerSelect]);
+
+  useEffect(() => {
+    if (!mapRef.current || !centerCoordinates) return;
+
+    mapRef.current.setCenter(centerCoordinates, 10, {
+      duration: 500,
+    });
+  }, [centerCoordinates]);
 
   return (
     <div className="satellite-map-shell">
