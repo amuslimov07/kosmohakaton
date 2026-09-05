@@ -4,10 +4,19 @@ import { Context } from "../main";
 import AuthService from "../services/AuthService";
 import { observer } from "mobx-react-lite";
 
+const readCertification = () => {
+  try {
+    return window.localStorage.getItem("dzz-specialist-certified") === "true";
+  } catch {
+    return false;
+  }
+};
+
 function Profile() {
   const { store } = useContext(Context);
   const [profile, setProfile] = useState(store.user);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCertified, setIsCertified] = useState(readCertification());
 
   useEffect(() => {
     AuthService.profile()
@@ -22,6 +31,8 @@ function Profile() {
         }
       })
       .finally(() => setIsLoading(false));
+
+    setIsCertified(readCertification());
   }, [store]);
 
   if (isLoading)
@@ -33,8 +44,8 @@ function Profile() {
 
   const volunteering = profile.volunteering || {};
   return (
-    <main className="profile-page">
-      <section className="profile-card">
+    <main className="profile-page profile-page-light">
+      <section className="profile-card profile-card-light">
         <div className="eyebrow">Личный кабинет</div>
         <div className="profile-heading">
           <div className="profile-avatar">
@@ -45,12 +56,24 @@ function Profile() {
             <p>{profile.email}</p>
           </div>
         </div>
-        <div className="profile-status">
+
+        <div className="profile-status profile-status-light">
           <span>Статус аккаунта</span>
           <strong>
             {profile.isActivated ? "Подтвержден" : "Ожидает подтверждения"}
           </strong>
         </div>
+
+        {isCertified && (
+          <div className="certificate-badge">
+            <span>🛰️</span>
+            <div>
+              <strong>Специалист по ДЗЗ</strong>
+              <small>Курс ДЗЗ пройден · финальная проверка пройдена</small>
+            </div>
+          </div>
+        )}
+
         <div className="profile-stats">
           <div>
             <strong>{volunteering.cleanedCount}</strong>
@@ -69,7 +92,7 @@ function Profile() {
             <span>участий</span>
           </div>
         </div>
-        <div className="bonus-panel">
+        <div className="bonus-panel bonus-panel-light">
           <span>Бонусный баланс</span>
           <strong>{profile.bonuses || 0} баллов</strong>
           <small>
@@ -77,9 +100,14 @@ function Profile() {
             акциях.
           </small>
         </div>
-        <Link className="profile-back" to="/">
-          Вернуться к мониторингу
-        </Link>
+        <div className="profile-actions">
+          <Link className="profile-back" to="/">
+            Вернуться к мониторингу
+          </Link>
+          <Link className="profile-back accent" to="/education">
+            К обучению ДЗЗ
+          </Link>
+        </div>
       </section>
     </main>
   );

@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 import $api from "../http";
 import "./VolunteerPages.css";
 
+const readCertification = () => {
+  try {
+    return window.localStorage.getItem("dzz-specialist-certified") === "true";
+  } catch {
+    return false;
+  }
+};
+
 export default function Achievements() {
   const [achievements, setAchievements] = useState([]);
   const [activity, setActivity] = useState([]);
@@ -11,6 +19,8 @@ export default function Achievements() {
     cleanedAreas: 0,
     totalPoints: 0,
   });
+  const [isCertified, setIsCertified] = useState(readCertification());
+
   useEffect(() => {
     Promise.all([
       $api.get("/achievements"),
@@ -23,7 +33,23 @@ export default function Achievements() {
         setStats(statsResponse.data);
       })
       .catch(() => {});
+
+    setIsCertified(readCertification());
   }, []);
+
+  const featuredAchievements = isCertified
+    ? [
+        {
+          code: "dzz-specialist",
+          title: "Специалист по ДЗЗ",
+          description: "Курс ДЗЗ пройден · финальная проверка подтверждена",
+          icon: "🛰️",
+          unlocked: true,
+        },
+        ...achievements,
+      ]
+    : achievements;
+
   return (
     <main className="volunteer-page">
       <div className="volunteer-shell">
@@ -58,11 +84,23 @@ export default function Achievements() {
             <span>баллы</span>
           </div>
         </div>
+
+        {isCertified && (
+          <section className="achievement-section achievement-highlight">
+            <span className="section-kicker">Подтверждение навыка</span>
+            <h2>🛰️ Специалист по ДЗЗ</h2>
+            <p>
+              Курс ДЗЗ пройден. Финальная проверка пройдена. Навык анализа
+              спутниковых данных подтверждён.
+            </p>
+          </section>
+        )}
+
         <section className="achievement-section">
           <span className="section-kicker">Коллекция</span>
           <h2>Ваши бейджи</h2>
           <div className="achievement-grid">
-            {achievements.map((achievement) => (
+            {featuredAchievements.map((achievement) => (
               <article
                 className={achievement.unlocked ? "unlocked" : "locked"}
                 key={achievement.code}
