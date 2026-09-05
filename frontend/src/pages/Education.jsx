@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import $api from "../http";
+import TrainingTrainer from "../components/TrainingTrainer";
 import "./VolunteerPages.css";
 
 const missionData = [
@@ -803,6 +804,12 @@ export default function Education() {
               Обучение
             </button>
             <button
+              className={viewMode === "trainer" ? "active" : ""}
+              onClick={() => setViewMode("trainer")}
+            >
+              Тренажёр
+            </button>
+            <button
               className={viewMode === "exam" ? "active" : ""}
               disabled={!trainingCompleted}
               onClick={() => trainingCompleted && setViewMode("exam")}
@@ -918,6 +925,8 @@ export default function Education() {
             </div>
           </>
         )}
+
+        {viewMode === "trainer" && <TrainingTrainer />}
 
         {viewMode === "exam" && (
           <section className="final-check">
