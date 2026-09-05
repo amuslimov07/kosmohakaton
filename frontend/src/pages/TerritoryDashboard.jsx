@@ -2,6 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import $api from "../http";
 import "./TerritoryDashboard.css";
 
+const confirmParticipation = async (eventId, userId) => {
+  const response = await $api.post(
+    `/events/${eventId}/participants/${userId}/confirm`,
+  );
+  return response.data;
+};
+
 const defaultFilters = {
   period: "all",
   territory: "all",
@@ -30,6 +37,9 @@ export default function TerritoryDashboard() {
   const [selectedEventId, setSelectedEventId] = useState("");
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [participants, setParticipants] = useState([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
   const areaMapRef = useRef(null);
   const [volunteerSearch, setVolunteerSearch] = useState("");
   const [eventForm, setEventForm] = useState({
@@ -97,6 +107,25 @@ export default function TerritoryDashboard() {
     if (selectedArea && !selectedAreaId) setSelectedAreaId(selectedArea.id);
     if (selectedEvent && !selectedEventId) setSelectedEventId(selectedEvent.id);
   }, [selectedArea, selectedAreaId, selectedEvent, selectedEventId]);
+
+  const loadParticipants = async (eventId) => {
+    if (!eventId) return;
+    setParticipantsLoading(true);
+    try {
+      const response = await $api.get(`/events/${eventId}/participants`);
+      setParticipants(response.data || []);
+    } catch {
+      setParticipants([]);
+    } finally {
+      setParticipantsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedEvent?.id) {
+      loadParticipants(selectedEvent.id);
+    }
+  }, [selectedEvent?.id]);
 
   const updateArea = async (area, nextStatus) => {
     const areaId = area.id;
@@ -546,47 +575,124 @@ export default function TerritoryDashboard() {
               </div>
             </div>
             {selectedEvent ? (
-              <div className="event-details">
-                <h3>{selectedEvent.title}</h3>
-                <ul>
-                  <li>
-                    <b>Территория:</b> {selectedEvent.territory}
-                  </li>
-                  <li>
-                    <b>Дата:</b> {selectedEvent.date}
-                  </li>
-                  <li>
-                    <b>Статус:</b>{" "}
-                    {selectedEvent.status === "published"
-                      ? "Активно"
-                      : "Завершено"}
-                  </li>
-                  <li>
-                    <b>Зарегистрировано:</b>{" "}
-                    {selectedEvent.volunteersRegistered}
-                  </li>
-                  <li>
-                    <b>Участвовало:</b> {selectedEvent.actualParticipants}
-                  </li>
-                  <li>
-                    <b>Явка:</b>{" "}
-                    {Math.round((selectedEvent.attendanceRate || 0) * 100)}%
-                  </li>
-                  <li>
-                    <b>Результат:</b> {selectedEvent.result}
-                  </li>
-                </ul>
-                <button
-                  className="primary-button"
-                  type="button"
-                  onClick={() => {
-                    setShowEventDetails(false);
-                    setShowEventForm(true);
-                  }}
-                >
-                  Назначить мероприятие
-                </button>
-              </div>
+              <>
+                <div className="event-details">
+                  <h3>{selectedEvent.title}</h3>
+                  <ul>
+                    <li>
+                      <b>Территория:</b> {selectedEvent.territory}
+                    </li>
+                    <li>
+                      <b>Дата:</b> {selectedEvent.date}
+                    </li>
+                    <li>
+                      <b>Статус:</b>{" "}
+                      {selectedEvent.status === "published"
+                        ? "Активно"
+                        : "Завершено"}
+                    </li>
+                    <li>
+                      <b>Зарегистрировано:</b>{" "}
+                      {selectedEvent.volunteersRegistered}
+                    </li>
+                    <li>
+                      <b>Участвовало:</b> {selectedEvent.actualParticipants}
+                    </li>
+                    <li>
+                      <b>Явка:</b>{" "}
+                      {Math.round((selectedEvent.attendanceRate || 0) * 100)}%
+                    </li>
+                    <li>
+                      <b>Результат:</b> {selectedEvent.result}
+                    </li>
+                  </ul>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => {
+                      setShowEventDetails(false);
+                      setShowEventForm(true);
+                    }}
+                  >
+                    Назначить мероприятие
+                  </button>
+                </div>
+
+                <div className="panel" style={{ marginTop: 20 }}>
+                  <div className="panel-header">
+                    <div>
+                      <span className="section-kicker">Участники</span>
+                      <h2>Подтверждение явки</h2>
+                    </div>
+                  </div>
+                  {confirmMessage && (
+                    <div className="toast-message">{confirmMessage}</div>
+                  )}
+                  {participantsLoading ? (
+                    <div className="empty-state">Загрузка участников...</div>
+                  ) : participants.length ? (
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Пользователь</th>
+                            <th>Статус</th>
+                            <th>Бонусы</th>
+                            <th>Действие</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {participants.map((participant) => (
+                            <tr key={participant.id}>
+                              <td>{participant.email}</td>
+                              <td>
+                                {participant.status === "confirmed"
+                                  ? "Подтверждён"
+                                  : participant.status === "absent"
+                                    ? "Отсутствовал"
+                                    : "Зарегистрирован"}
+                              </td>
+                              <td>{participant.bonusPoints || 0}</td>
+                              <td>
+                                <button
+                                  className="primary-button"
+                                  type="button"
+                                  onClick={async () => {
+                                    const result = await confirmParticipation(
+                                      selectedEvent.id,
+                                      participant.userId,
+                                    );
+                                    setConfirmMessage(
+                                      result.message || "Участие подтверждено",
+                                    );
+                                    await loadParticipants(selectedEvent.id);
+                                    reload();
+                                  }}
+                                  disabled={participant.status === "confirmed"}
+                                  style={{
+                                    opacity:
+                                      participant.status === "confirmed"
+                                        ? 0.5
+                                        : 1,
+                                  }}
+                                >
+                                  {participant.status === "confirmed"
+                                    ? "Подтверждено"
+                                    : "Подтвердить участие"}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      На мероприятие ещё никто не зарегистрирован.
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <div className="empty-state">Нет доступных мероприятий.</div>
             )}

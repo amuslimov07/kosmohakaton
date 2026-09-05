@@ -171,6 +171,18 @@
   border-left-color: #17a16a;
 }
 
+.module-list button.locked {
+  color: #91a098;
+  background: rgba(229, 235, 230, 0.7);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.module-list button.locked strong,
+.module-list button.locked small {
+  color: #91a098;
+}
+
 .module-list button > span {
   display: grid;
   place-items: center;
@@ -288,6 +300,37 @@
   border-color: rgba(28, 150, 103, 0.7);
   background: rgba(102, 203, 154, 0.12);
   color: #164e3f;
+}
+
+.quiz-options button.correct {
+  border-color: #1fa370;
+  background: rgba(74, 192, 127, 0.2);
+  color: #136d50;
+}
+
+.quiz-options button.incorrect {
+  border-color: #bf6f4d;
+  background: rgba(239, 184, 149, 0.25);
+  color: #7f4e42;
+}
+
+.assessment-question.correct {
+  border-color: #1fa370;
+  background: rgba(74, 192, 127, 0.12);
+}
+
+.assessment-question.incorrect {
+  border-color: #bf6f4d;
+  background: rgba(239, 184, 149, 0.14);
+}
+
+.quiz-options button:disabled,
+.assessment-tabs button:disabled,
+.primary-button:disabled,
+.outline-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
 }
 
 .primary-button,
@@ -606,6 +649,16 @@
   font-weight: 700;
 }
 
+.question-progress {
+  display: block;
+  margin-bottom: 8px;
+  color: #6d7d75;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
 .vertical-options {
   display: grid;
   grid-template-columns: 1fr;
@@ -617,6 +670,51 @@
   justify-content: space-between;
   gap: 16px;
   margin-top: 18px;
+}
+
+.assessment-question-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.assessment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.assessment-review {
+  display: grid;
+  gap: 7px;
+}
+
+.assessment-review strong {
+  color: #7f4e42;
+}
+
+.assessment-review span {
+  color: #7f4e42;
+}
+
+.review-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.review-link {
+  padding: 7px 9px;
+  color: #7f4e42;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(191, 111, 77, 0.35);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .assessment-result {
@@ -854,6 +952,207 @@
   background: #fff;
   border: 1px solid #d2d9cf;
   border-radius: 5px;
+}
+
+.profile-shell {
+  width: 100%;
+  display: grid;
+  gap: 18px;
+}
+
+.profile-page-heading {
+  align-items: center;
+}
+
+.profile-page-heading h1 {
+  margin-top: 10px;
+}
+
+.profile-page-heading p {
+  margin-top: 8px;
+  color: #607166;
+  font-size: 14px;
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(28, 150, 103, 0.18);
+  border-radius: 50%;
+  color: #176448;
+  background: rgba(102, 203, 154, 0.16);
+  font: 800 28px "Manrope";
+}
+
+.profile-overview {
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(111, 146, 129, 0.14);
+  border-radius: 20px;
+  box-shadow: 0 18px 35px rgba(39, 62, 48, 0.06);
+}
+
+.profile-overview .profile-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 16px;
+  border-top: 0;
+  border-bottom: 1px solid rgba(118, 143, 133, 0.16);
+}
+
+.profile-overview .profile-status span,
+.profile-overview .bonus-panel span {
+  color: #607166;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-overview .profile-status strong {
+  color: #19785a;
+  font-size: 13px;
+}
+
+.profile-overview .certificate-badge {
+  margin-top: 18px;
+}
+
+.profile-overview .profile-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 0;
+}
+
+.profile-overview .profile-stats div {
+  min-width: 0;
+  padding: 16px 12px;
+  background: rgba(242, 247, 242, 0.8);
+  border: 1px solid rgba(125, 160, 135, 0.16);
+  border-radius: 12px;
+}
+
+.profile-overview .profile-stats strong,
+.profile-overview .profile-stats span {
+  display: block;
+}
+
+.profile-overview .profile-stats strong {
+  color: #1a3b30;
+  font: 800 25px "Manrope";
+}
+
+.profile-overview .profile-stats span {
+  margin-top: 5px;
+  color: #687c71;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.profile-overview .bonus-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label amount"
+    "details details";
+  align-items: baseline;
+  gap: 8px 16px;
+  margin-top: 18px;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(118, 143, 133, 0.16);
+}
+
+.profile-overview .bonus-panel span {
+  grid-area: label;
+}
+
+.profile-overview .bonus-panel strong {
+  grid-area: amount;
+  margin-left: 0;
+  color: #a95b2c;
+  font: 800 22px "Manrope";
+  text-align: right;
+}
+
+.profile-overview .bonus-panel small {
+  grid-area: details;
+  display: block;
+  margin-top: 2px;
+  color: #61766d;
+  font-size: 12px;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 0;
+}
+
+.profile-actions .primary-button,
+.profile-actions .outline-button {
+  min-height: 42px;
+}
+
+.profile-history {
+  margin-top: 6px;
+}
+
+.profile-history .panel {
+  margin-top: 0;
+}
+
+.profile-history .panel-header h2 {
+  margin-top: 10px;
+}
+
+@media (max-width: 560px) {
+  .profile-page-heading {
+    align-items: flex-start;
+  }
+
+  .profile-page-heading .profile-avatar {
+    order: -1;
+  }
+
+  .profile-overview {
+    padding: 18px;
+  }
+
+  .profile-overview .profile-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .profile-overview .profile-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-overview .bonus-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "label"
+      "amount"
+      "details";
+    align-items: start;
+  }
+
+  .profile-overview .bonus-panel strong {
+    text-align: left;
+  }
+
+  .profile-actions .primary-button,
+  .profile-actions .outline-button {
+    width: 100%;
+  }
 }
 .event-cards {
   display: grid;

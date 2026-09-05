@@ -21,6 +21,7 @@ function Navbar() {
             )}
             <NavLink to="/education">Обучение</NavLink>
             <NavLink to="/events">Мероприятия</NavLink>
+            <NavLink to="/rewards">Магазин Бонусов</NavLink>
             <NavLink to="/achievements">Достижения</NavLink>
             <NavLink to="/profile">Профиль</NavLink>
             <button className="nav-logout" onClick={() => store.logout()}>

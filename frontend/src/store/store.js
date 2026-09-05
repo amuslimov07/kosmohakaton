@@ -24,6 +24,9 @@ export default class Store {
     try {
       const response = await AuthService.login(email, password, role);
       localStorage.setItem("token", response.data.accessToken);
+      localStorage.setItem("userId", response.data.user.id);
+      localStorage.removeItem("dzz-mission-progress");
+      localStorage.removeItem("dzz-specialist-certified");
       this.setAuth(true);
       this.setUser(response.data.user);
       return { success: true };
@@ -38,6 +41,9 @@ export default class Store {
     try {
       const response = await AuthService.registration(email, password, role);
       localStorage.setItem("token", response.data.accessToken);
+      localStorage.setItem("userId", response.data.user.id);
+      localStorage.removeItem("dzz-mission-progress");
+      localStorage.removeItem("dzz-specialist-certified");
       this.setAuth(true);
       this.setUser(response.data.user);
       return { success: true };
@@ -52,6 +58,7 @@ export default class Store {
     try {
       const response = await AuthService.logout();
       localStorage.removeItem("token");
+      localStorage.removeItem("userId");
       this.setAuth(false);
       this.setUser({});
       console.log(response);
@@ -69,6 +76,7 @@ export default class Store {
         withCredentials: true,
       });
       localStorage.setItem("token", response.data.accessToken);
+      localStorage.setItem("userId", response.data.user.id);
       this.setAuth(true);
       this.setUser(response.data.user);
     } catch (e) {

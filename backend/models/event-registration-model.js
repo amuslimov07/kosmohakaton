@@ -6,10 +6,11 @@ const EventRegistrationSchema = new Schema(
     eventId: { type: String, required: true },
     status: {
       type: String,
-      enum: ["registered", "attended", "cancelled"],
+      enum: ["registered", "confirmed", "attended", "absent", "cancelled"],
       default: "registered",
     },
     bonusPoints: { type: Number, default: 0 },
+    confirmedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

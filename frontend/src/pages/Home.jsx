@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import $api from "../http";
 import "./Home.css";
-import "leaflet/dist/leaflet.css";
-import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
+import SatelliteMap from "../components/SatelliteMap/SatelliteMap";
 
 const fallbackAreas = [
   {
@@ -33,7 +32,6 @@ const fallbackAreas = [
 ];
 const tabs = {
   "#satellite-analysis": "map",
-  "#ai-analysis": "ai",
   "#volunteer-hq": "volunteers",
 };
 
@@ -43,11 +41,39 @@ export default function Home() {
   );
   const [areas, setAreas] = useState(fallbackAreas);
   const [selectedArea, setSelectedArea] = useState(fallbackAreas[0]);
-  const [aiLogs, setAiLogs] = useState([
-    "Слой ДЗЗ готов к анализу",
-    "Демонстрационный источник MVP подключён",
-  ]);
   const [volunteerCount, setVolunteerCount] = useState(42);
+  const [readyEvent, setReadyEvent] = useState(null);
+  const [isReadyLoading, setIsReadyLoading] = useState(false);
+
+  useEffect(() => {
+    $api
+      .get("/events/my")
+      .then((response) => {
+        const registration = response.data?.find(
+          (item) => item.eventId === "event-1" && item.status !== "cancelled",
+        );
+        if (registration) {
+          setReadyEvent(registration);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const confirmReadiness = async () => {
+    if (isReadyLoading || readyEvent) return;
+    setIsReadyLoading(true);
+    try {
+      const response = await $api.post("/events/event-1/register");
+      setReadyEvent(response.data.registration);
+      setVolunteerCount((count) => count + 1);
+    } catch (error) {
+      if (error.response?.status === 409) {
+        setReadyEvent({ eventId: "event-1", status: "registered" });
+      }
+    } finally {
+      setIsReadyLoading(false);
+    }
+  };
 
   useEffect(() => {
     $api
@@ -60,13 +86,6 @@ export default function Home() {
   }, []);
 
   const selectTab = (tab) => setActiveTab(tab);
-  const runAnalysis = () => {
-    setAiLogs((logs) => [
-      `Анализ участка «${selectedArea.name}» завершён`,
-      "Найдены объекты для полевой проверки",
-      ...logs,
-    ]);
-  };
 
   return (
     <div className="home-page">
@@ -80,8 +99,8 @@ export default function Home() {
             <strong>Изменить берег.</strong>
           </h1>
           <p>
-            Спутниковые данные, ИИ-анализ и команда волонтёров помогают
-            превращать наблюдение в реальный результат.
+            Спутниковые данные и команда волонтёров помогают превращать
+            наблюдение в реальный результат.
           </p>
         </div>
         <div className="home-hero-actions">
@@ -98,13 +117,6 @@ export default function Home() {
           onClick={() => selectTab("map")}
         >
           🛰️ Спутниковый анализ
-        </button>
-        <button
-          className={activeTab === "ai" ? "active" : ""}
-          id="ai-analysis"
-          onClick={() => selectTab("ai")}
-        >
-          🧠 ИИ-анализ
         </button>
         <button
           className={activeTab === "volunteers" ? "active" : ""}
@@ -138,48 +150,7 @@ export default function Home() {
             </p>
             <div className="workspace-grid">
               <div className="workspace-map">
-                <MapContainer
-                  center={[50.5, 45]}
-                  zoom={3}
-                  scrollWheelZoom
-                  className="real-map"
-                >
-                  <TileLayer
-                    attribution="&copy; OpenStreetMap contributors"
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  {areas.map((area) => {
-                    const [latitude, longitude] = area.coordinates
-                      .split(",")
-                      .map(Number);
-                    return (
-                      <CircleMarker
-                        center={[latitude, longitude]}
-                        radius={10}
-                        pathOptions={{
-                          color:
-                            area.problemType === "pollution"
-                              ? "#e87857"
-                              : area.problemType === "trash"
-                                ? "#e5b452"
-                                : "#79c18d",
-                          fillOpacity: 0.9,
-                        }}
-                        key={area.id}
-                        eventHandlers={{ click: () => setSelectedArea(area) }}
-                      >
-                        <Popup>
-                          <strong>{area.name}</strong>
-                          <br />
-                          {area.type}
-                        </Popup>
-                      </CircleMarker>
-                    );
-                  })}
-                </MapContainer>
-                <span className="map-source">
-                  OpenStreetMap · участки из backend
-                </span>
+                <SatelliteMap />
               </div>
               <div className="area-list">
                 {areas.map((area) => (
@@ -226,39 +197,6 @@ export default function Home() {
             )}
           </section>
         )}
-        {activeTab === "ai" && (
-          <section className="home-panel ai-panel" id="ai-panel">
-            <div className="panel-heading">
-              <div>
-                <span className="section-kicker">ИИ-анализ</span>
-                <h2>Экологический помощник</h2>
-              </div>
-              <span className="demo-badge">Модель · MVP</span>
-            </div>
-            <div className="ai-layout">
-              <div className="ai-visual">
-                <div className="ai-scan" />
-                <span>АНАЛИЗ ДЗЗ</span>
-                <strong>{selectedArea.name}</strong>
-              </div>
-              <div className="ai-console">
-                <p>
-                  Выбранный участок: <strong>{selectedArea.type}</strong>
-                </p>
-                {aiLogs.map((log, index) => (
-                  <div key={`${log}-${index}`}>› {log}</div>
-                ))}
-                <button className="primary-button" onClick={runAnalysis}>
-                  Запустить анализ
-                </button>
-              </div>
-            </div>
-            <div className="info-note">
-              ИИ помогает находить аномалии на демонстрационных снимках. Решение
-              о выезде всегда подтверждается экологом или сотрудником ООПТ.
-            </div>
-          </section>
-        )}
         {activeTab === "volunteers" && (
           <section className="home-panel" id="volunteer-panel">
             <div className="panel-heading">
@@ -299,9 +237,14 @@ export default function Home() {
                 </Link>
                 <button
                   className="text-button"
-                  onClick={() => setVolunteerCount((count) => count + 1)}
+                  disabled={isReadyLoading || Boolean(readyEvent)}
+                  onClick={confirmReadiness}
                 >
-                  Я готов участвовать
+                  {readyEvent
+                    ? "Вы уже участвуете"
+                    : isReadyLoading
+                      ? "Подтверждаем..."
+                      : "Я готов участвовать"}
                 </button>
               </div>
             </div>

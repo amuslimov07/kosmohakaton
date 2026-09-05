@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import $api from "../http";
 import "./VolunteerPages.css";
@@ -293,6 +293,7 @@ const finalLevels = [
     description:
       "Проверка базового понимания ДЗЗ и принципов спутникового наблюдения.",
     threshold: 70,
+    reviewModules: [0, 1, 2],
     questions: [
       {
         id: "q1",
@@ -340,6 +341,7 @@ const finalLevels = [
     description:
       "Сравнение снимков, поиск изменений и выбор наиболее вероятного объяснения.",
     threshold: 70,
+    reviewModules: [3, 4, 5],
     questions: [
       {
         id: "q1",
@@ -387,6 +389,7 @@ const finalLevels = [
     description:
       "Мини-симулятор: определить риск, выбрать дальнейшее действие и объяснить выбор.",
     threshold: 70,
+    reviewModules: [6, 7, 8, 9],
     questions: [
       {
         id: "q1",
@@ -431,9 +434,16 @@ const finalLevels = [
   },
 ];
 
-const getSavedProgress = () => {
+const getProgressKey = (userId) =>
+  userId ? `dzz-mission-progress:${userId}` : null;
+const getCertificationKey = (userId) =>
+  userId ? `dzz-specialist-certified:${userId}` : null;
+
+const getSavedProgress = (userId) => {
   try {
-    const raw = window.localStorage.getItem("dzz-mission-progress");
+    const key = getProgressKey(userId);
+    if (!key) return { completedModules: [], points: 0, status: "not-started" };
+    const raw = window.localStorage.getItem(key);
     if (!raw) return { completedModules: [], points: 0, status: "not-started" };
     return JSON.parse(raw);
   } catch {
@@ -441,34 +451,39 @@ const getSavedProgress = () => {
   }
 };
 
-const persistProgress = (progressState) => {
+const persistProgress = (progressState, userId) => {
   try {
-    window.localStorage.setItem(
-      "dzz-mission-progress",
-      JSON.stringify(progressState),
-    );
+    const key = getProgressKey(userId);
+    if (!key) return;
+    window.localStorage.setItem(key, JSON.stringify(progressState));
   } catch {
     // ignore local storage write errors in demo mode
   }
 };
 
-const readCertification = () => {
+const readCertification = (userId) => {
   try {
-    return window.localStorage.getItem("dzz-specialist-certified") === "true";
+    const key = getCertificationKey(userId);
+    return key ? window.localStorage.getItem(key) === "true" : false;
   } catch {
     return false;
   }
 };
 
-const setCertification = (value) => {
+const setCertification = (value, userId) => {
   try {
-    window.localStorage.setItem("dzz-specialist-certified", String(value));
+    const key = getCertificationKey(userId);
+    if (key) window.localStorage.setItem(key, String(value));
   } catch {
     // ignore local storage write errors in demo mode
   }
 };
 
+const checkAnswer = (question, selectedAnswer) =>
+  selectedAnswer === question.answer;
+
 export default function Education() {
+  const userId = localStorage.getItem("userId");
   const [course] = useState({
     id: "course-dzz-101",
     title: "ДЗЗ: путь от наблюдения к действию",
@@ -476,7 +491,7 @@ export default function Education() {
       "Миссии для новичка: от знакомства с спутниковым снимком до анализа экологических изменений и выбора дальнейшего шага.",
     modules: missionData,
   });
-  const [progress, setProgress] = useState(getSavedProgress);
+  const [progress, setProgress] = useState(() => getSavedProgress(userId));
   const [activeMission, setActiveMission] = useState(0);
   const [viewMode, setViewMode] = useState("training");
   const [missionFeedback, setMissionFeedback] = useState(null);
@@ -484,9 +499,11 @@ export default function Education() {
   const [assessmentState, setAssessmentState] = useState({
     currentLevel: 0,
     answers: {},
+    questionStatuses: {},
     results: {},
+    certified: false,
   });
-  const [isCertified, setIsCertified] = useState(readCertification());
+  const [storedCertification] = useState(() => readCertification(userId));
 
   useEffect(() => {
     Promise.all([
@@ -502,6 +519,22 @@ export default function Education() {
           points: progressResponse.data.points || 0,
           status: progressResponse.data.status || "in-progress",
         };
+        const passedLevels = progressResponse.data.passedLevels || [];
+        const savedResults = Object.fromEntries(
+          passedLevels.map((levelId) => [
+            levelId,
+            {
+              score: 100,
+              passed: true,
+              correct:
+                finalLevels.find((level) => level.id === levelId)?.questions
+                  .length || 0,
+              total:
+                finalLevels.find((level) => level.id === levelId)?.questions
+                  .length || 0,
+            },
+          ]),
+        );
         setProgress((previous) => ({
           ...previous,
           ...incoming,
@@ -509,25 +542,61 @@ export default function Education() {
             ? incoming.completedModules
             : previous.completedModules,
         }));
+        const savedModules = incoming.completedModules.length
+          ? incoming.completedModules
+          : getSavedProgress(userId).completedModules;
+        const nextModuleIndex = course.modules.findIndex(
+          (module) => !savedModules.includes(module.id),
+        );
+        setActiveMission(
+          nextModuleIndex === -1 ? course.modules.length - 1 : nextModuleIndex,
+        );
+        setAssessmentState((previous) => ({
+          ...previous,
+          currentLevel: Math.min(
+            finalLevels.findIndex(
+              (level) => !passedLevels.includes(level.id),
+            ) === -1
+              ? finalLevels.length - 1
+              : finalLevels.findIndex(
+                  (level) => !passedLevels.includes(level.id),
+                ),
+            finalLevels.length - 1,
+          ),
+          results: { ...previous.results, ...savedResults },
+          certified: Boolean(progressResponse.data.certified),
+        }));
       }
     });
   }, []);
 
   useEffect(() => {
-    persistProgress(progress);
-  }, [progress]);
+    persistProgress(progress, userId);
+  }, [progress, userId]);
 
   useEffect(() => {
     const passed = Object.values(assessmentState.results).filter(
       (result) => result?.passed,
     ).length;
     const allComplete = passed === finalLevels.length;
-    setIsCertified(allComplete);
-    setCertification(allComplete);
-  }, [assessmentState.results]);
+    if (allComplete || assessmentState.certified) {
+      setCertification(true, userId);
+    }
+  }, [assessmentState.results, assessmentState.certified]);
 
-  const mission = course.modules[activeMission];
+  const isModuleCompleted = (moduleId) =>
+    progress.completedModules.includes(moduleId);
+  const isModuleUnlocked = (index) =>
+    index === 0 || isModuleCompleted(course.modules[index - 1].id);
+  const isLastModule = (index) => index === course.modules.length - 1;
+  const mission = course.modules[activeMission] || course.modules[0];
+  const isCertified =
+    storedCertification ||
+    assessmentState.certified ||
+    Object.values(assessmentState.results).filter((result) => result?.passed)
+      .length === finalLevels.length;
   const completedCount = progress.completedModules.length;
+  const trainingCompleted = completedCount === course.modules.length;
   const totalProgress = Math.round(
     ((completedCount +
       Object.keys(assessmentState.results).filter(
@@ -558,16 +627,19 @@ export default function Education() {
           status: nextStatus,
         };
       });
-      setMissionFeedback({
-        correct: true,
-        message: mission.feedback.correct,
-      });
+      setTaskModalOpen(false);
+      setMissionFeedback(null);
+      setActiveMission((previous) =>
+        isLastModule(previous) ? previous : previous + 1,
+      );
       return;
     }
 
+    setTaskModalOpen(false);
     setMissionFeedback({
       correct: false,
-      message: mission.feedback.incorrect,
+      message:
+        "Ответ неверный. Вернитесь к материалу и обратите внимание на ключевые признаки этой темы.",
     });
   };
 
@@ -580,9 +652,8 @@ export default function Education() {
     setTaskModalOpen(false);
   };
 
-  const handleTaskSubmit = (selectedIndex) => {
+  const handleTaskSubmit = (selectedIndex) =>
     handleMissionAnswer(selectedIndex);
-  };
 
   const updateAssessmentAnswer = (levelId, questionId, answerIndex) => {
     setAssessmentState((previous) => ({
@@ -594,19 +665,64 @@ export default function Education() {
           [questionId]: answerIndex,
         },
       },
+      questionStatuses: {
+        ...previous.questionStatuses,
+        [levelId]: {
+          ...(previous.questionStatuses[levelId] || {}),
+          [questionId]: "answered",
+        },
+      },
     }));
   };
 
-  const submitLevel = (levelIndex) => {
+  const checkAssessment = (levelIndex) => {
     const level = finalLevels[levelIndex];
     const answers = assessmentState.answers[level.id] || {};
-    let correct = 0;
+    const statuses = {};
+
     level.questions.forEach((question) => {
-      if (answers[question.id] === question.answer) correct += 1;
+      const selectedAnswer = answers[question.id];
+      statuses[question.id] =
+        selectedAnswer === undefined
+          ? "unanswered"
+          : checkAnswer(question, selectedAnswer)
+            ? "correct"
+            : "incorrect";
     });
 
-    const score = Math.round((correct / level.questions.length) * 100);
-    const passed = score >= level.threshold;
+    const perfectLevel = level.questions.every(
+      (question) => statuses[question.id] === "correct",
+    );
+    if (perfectLevel) {
+      setCertification(true);
+    }
+
+    setAssessmentState((previous) => ({
+      ...previous,
+      certified: previous.certified || perfectLevel,
+      questionStatuses: {
+        ...previous.questionStatuses,
+        [level.id]: {
+          ...(previous.questionStatuses[level.id] || {}),
+          ...statuses,
+        },
+      },
+    }));
+  };
+
+  const completeAssessmentLevel = async (levelIndex) => {
+    const level = finalLevels[levelIndex];
+    const statuses = assessmentState.questionStatuses[level.id] || {};
+    const allCorrect = level.questions.every(
+      (question) => statuses[question.id] === "correct",
+    );
+    if (!allCorrect) return;
+
+    try {
+      await $api.post("/education/progress/assessment", { levelId: level.id });
+    } catch {
+      return;
+    }
 
     setAssessmentState((previous) => ({
       ...previous,
@@ -614,9 +730,9 @@ export default function Education() {
       results: {
         ...previous.results,
         [level.id]: {
-          score,
-          passed,
-          correct,
+          score: 100,
+          passed: true,
+          correct: level.questions.length,
           total: level.questions.length,
         },
       },
@@ -687,11 +803,18 @@ export default function Education() {
           </button>
           <button
             className={viewMode === "exam" ? "active" : ""}
-            onClick={() => setViewMode("exam")}
+            disabled={!trainingCompleted}
+            onClick={() => trainingCompleted && setViewMode("exam")}
           >
             Экзамен
           </button>
         </div>
+
+        {!trainingCompleted && (
+          <div className="quiz-message">
+            Завершите все учебные миссии, чтобы открыть экзамен.
+          </div>
+        )}
 
         {viewMode === "training" && (
           <>
@@ -699,21 +822,30 @@ export default function Education() {
               <aside className="module-list mission-list">
                 {course.modules.map((item, index) => (
                   <button
-                    className={activeMission === index ? "selected" : ""}
-                    onClick={() => setActiveMission(index)}
+                    className={`${activeMission === index ? "selected" : ""} ${
+                      !isModuleUnlocked(index) ? "locked" : ""
+                    }`}
+                    onClick={() => {
+                      if (isModuleUnlocked(index)) setActiveMission(index);
+                    }}
+                    disabled={!isModuleUnlocked(index)}
                     key={item.id}
                   >
                     <span>
-                      {progress.completedModules.includes(item.id)
+                      {isModuleCompleted(item.id)
                         ? "✓"
-                        : item.number}
+                        : isModuleUnlocked(index)
+                          ? item.number
+                          : "🔒"}
                     </span>
                     <div>
                       <strong>{item.title}</strong>
                       <small>
-                        {progress.completedModules.includes(item.id)
+                        {isModuleCompleted(item.id)
                           ? "Пройдено"
-                          : `${item.points} очков`}
+                          : !isModuleUnlocked(index)
+                            ? "Сначала пройдите предыдущую тему"
+                            : `${item.points} очков`}
                       </small>
                     </div>
                   </button>
@@ -758,12 +890,18 @@ export default function Education() {
 
                 <div className="mission-footer">
                   <span>
-                    {progress.completedModules.includes(mission.id)
+                    {isModuleCompleted(mission.id)
                       ? "Миссия выполнена"
                       : "Доступна к прохождению"}
                   </span>
-                  <button className="primary-button" onClick={openTaskModal}>
-                    Следующий уровень →
+                  <button
+                    className="primary-button"
+                    onClick={openTaskModal}
+                    disabled={isModuleCompleted(mission.id)}
+                  >
+                    {isLastModule(activeMission)
+                      ? "Завершить курс"
+                      : "Следующий уровень →"}
                   </button>
                 </div>
               </section>
@@ -791,6 +929,10 @@ export default function Education() {
                   key={level.id}
                   className={
                     assessmentState.currentLevel === index ? "selected" : ""
+                  }
+                  disabled={
+                    index > 0 &&
+                    !assessmentState.results[finalLevels[index - 1].id]?.passed
                   }
                   onClick={() =>
                     setAssessmentState((previous) => ({
@@ -831,63 +973,169 @@ export default function Education() {
                     )}
                   </div>
 
-                  <div className="assessment-questions">
-                    {level.questions.map((question) => (
-                      <div key={question.id} className="assessment-question">
-                        <p>{question.prompt}</p>
-                        <div className="quiz-options vertical-options">
-                          {question.options.map((option, optionIndex) => (
-                            <button
-                              key={option}
-                              className={
-                                (assessmentState.answers[level.id]?.[
-                                  question.id
-                                ] ?? null) === optionIndex
-                                  ? "selected"
-                                  : ""
-                              }
-                              onClick={() =>
-                                updateAssessmentAnswer(
-                                  level.id,
-                                  question.id,
-                                  optionIndex,
-                                )
-                              }
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {result?.passed && (
+                    <div className="assessment-result saved-assessment-result">
+                      <strong>Уровень уже пройден</strong>
+                      <span>Результат сохранён в вашем профиле.</span>
+                      {index < finalLevels.length - 1 && (
+                        <button
+                          className="primary-button"
+                          onClick={() =>
+                            setAssessmentState((previous) => ({
+                              ...previous,
+                              currentLevel: index + 1,
+                            }))
+                          }
+                        >
+                          Открыть следующий уровень →
+                        </button>
+                      )}
+                    </div>
+                  )}
 
-                  <div className="assessment-footer">
-                    {result && (
-                      <div className="assessment-result">
-                        <strong>
-                          {result.passed
-                            ? "Уровень пройден"
-                            : "Нужно повторить материал"}
-                        </strong>
-                        <span>
-                          {result.correct}/{result.total} правильных ответов ·{" "}
-                          {result.score}%
-                        </span>
-                        <small>
-                          {result.passed
-                            ? "Отлично. Вы демонстрируете понимание принципов ДЗЗ и анализа данных."
-                            : "Проверьте тему ещё раз и повторите соответствующие миссии, затем попробуйте снова."}
-                        </small>
+                  {!result?.passed && (
+                    <div className="assessment-questions">
+                      {level.questions.map((question) => {
+                        const selectedAnswer =
+                          assessmentState.answers[level.id]?.[question.id];
+                        const questionStatus =
+                          assessmentState.questionStatuses[level.id]?.[
+                            question.id
+                          ] || "unanswered";
+
+                        return (
+                          <div
+                            className={`assessment-question ${
+                              questionStatus === "correct"
+                                ? "correct"
+                                : questionStatus === "incorrect"
+                                  ? "incorrect"
+                                  : ""
+                            }`}
+                            key={question.id}
+                          >
+                            <p>{question.prompt}</p>
+                            <div className="quiz-options vertical-options">
+                              {question.options.map((option, optionIndex) => {
+                                const isSelected =
+                                  selectedAnswer === optionIndex;
+
+                                return (
+                                  <button
+                                    key={option}
+                                    className={isSelected ? "selected" : ""}
+                                    onClick={() =>
+                                      updateAssessmentAnswer(
+                                        level.id,
+                                        question.id,
+                                        optionIndex,
+                                      )
+                                    }
+                                  >
+                                    {option}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {questionStatus === "incorrect" && (
+                              <div className="quiz-message assessment-review">
+                                <strong>Что повторить</strong>
+                                <span>
+                                  Перед повторной проверкой изучите связанные
+                                  темы:
+                                </span>
+                                <div className="review-links">
+                                  {level.reviewModules.map((moduleIndex) => {
+                                    const reviewModule =
+                                      course.modules[moduleIndex];
+
+                                    return (
+                                      <button
+                                        className="review-link"
+                                        key={reviewModule.id}
+                                        disabled={
+                                          !isModuleUnlocked(moduleIndex)
+                                        }
+                                        onClick={() => {
+                                          if (isModuleUnlocked(moduleIndex)) {
+                                            setActiveMission(moduleIndex);
+                                            setViewMode("training");
+                                          }
+                                        }}
+                                      >
+                                        {reviewModule.number}.{" "}
+                                        {reviewModule.title}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {questionStatus === "correct" && (
+                              <div className="quiz-message success">
+                                {question.explanation}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {!result?.passed && (
+                    <div className="assessment-footer">
+                      <div className="assessment-actions">
+                        <button
+                          className="primary-button"
+                          disabled={
+                            !level.questions.every(
+                              (question) =>
+                                assessmentState.answers[level.id]?.[
+                                  question.id
+                                ] !== undefined,
+                            )
+                          }
+                          onClick={() => checkAssessment(index)}
+                        >
+                          Проверить ответы
+                        </button>
+                        <button
+                          className="primary-button"
+                          disabled={
+                            !level.questions.every(
+                              (question) =>
+                                assessmentState.questionStatuses[level.id]?.[
+                                  question.id
+                                ] === "correct",
+                            )
+                          }
+                          onClick={() => completeAssessmentLevel(index)}
+                        >
+                          {index === finalLevels.length - 1
+                            ? "Завершить экзамен"
+                            : "Перейти к следующему уровню →"}
+                        </button>
                       </div>
-                    )}
-                    <button
-                      className="primary-button"
-                      onClick={() => submitLevel(index)}
-                    >
-                      Проверить уровень
-                    </button>
-                  </div>
+                      {result && (
+                        <div className="assessment-result">
+                          <strong>
+                            {result.passed
+                              ? "Уровень пройден"
+                              : "Нужно повторить материал"}
+                          </strong>
+                          <span>
+                            {result.correct}/{result.total} правильных ответов ·{" "}
+                            {result.score}%
+                          </span>
+                          <small>
+                            {result.passed
+                              ? "Отлично. Вы демонстрируете понимание принципов ДЗЗ и анализа данных."
+                              : "Проверьте тему ещё раз и повторите соответствующие миссии, затем попробуйте снова."}
+                          </small>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -947,32 +1195,9 @@ export default function Education() {
               ))}
             </div>
 
-            {missionFeedback && (
-              <div
-                className={
-                  missionFeedback.correct
-                    ? "quiz-message success"
-                    : "quiz-message"
-                }
-              >
-                {missionFeedback.message}
-              </div>
-            )}
-
             <div className="task-modal-actions">
               <button className="outline-button" onClick={closeTaskModal}>
                 Закрыть
-              </button>
-              <button
-                className="primary-button"
-                onClick={() => {
-                  setTaskModalOpen(false);
-                  setActiveMission((previous) =>
-                    Math.min(previous + 1, course.modules.length - 1),
-                  );
-                }}
-              >
-                Продолжить →
               </button>
             </div>
           </div>
